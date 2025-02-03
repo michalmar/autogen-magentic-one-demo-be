@@ -43,3 +43,21 @@ run: `uvicorn main:app --reload`
 - [ ] display li/ul correctly within messages
 - [x] FIX width of messages when Web Sufer -> problem je v PRE/CODE
 - [x] closing the session (event source)
+
+
+## Run docker locally
+
+```bash
+docker build --tag fastapi-demo .
+```
+
+```bash 
+docker run --detach --publish 3100:3100 fastapi-demo
+```
+
+
+## Deploy
+
+```bash
+az containerapp up --resource-group rg-autogen-demos --name web-aca-app --ingress external --target-port 3100 --source .
+```

@@ -11,6 +11,7 @@ fastapi
 fastapi-cors
 python-multipart
 tiktoken
+jinja2
 
 autogen-agentchat==0.4.1
 autogen-ext[azure]==0.4.1
