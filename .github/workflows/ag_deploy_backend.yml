@@ -31,3 +31,12 @@ jobs:
         context: .
         push: true
         tags: ghcr.io/${{ github.repository }}/autogen-magentic-one-demo-be:latest
+
+    - name: Deploy to Azure Container App
+      uses: azure/container-apps-deploy-action@v1
+      with:
+        appSourcePath: ${{ github.workspace }}
+        registryUrl: ghcr.io
+        registryUsername: ${{ github.actor }}
+        registryPassword: ${{ secrets.GH_TOKEN }}
+            
