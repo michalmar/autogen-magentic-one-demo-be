@@ -45,6 +45,6 @@ jobs:
         registryUrl: ghcr.io
         registryUsername: ${{ github.actor }}
         registryPassword: ${{ secrets.GH_TOKEN }}
-        containerAppName: my-test-container-app
-        resourceGroup: my-test-rg
+        containerAppName: autogen-demo-be
+        resourceGroup: rg-autogen-demos
             
