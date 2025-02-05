@@ -1,48 +1,48 @@
-name: Trigger auto deployment for autogen-demo-be
+# name: Trigger auto deployment for autogen-demo-be
 
-# When this action will be executed
-on:
-  # Automatically trigger it when detected changes in repo
-  push:
-    branches: 
-      [ main ]
-    paths:
-    - '**'
-    - '.github/workflows/autogen-demo-be-AutoDeployTrigger-169ed905-21ef-4e44-b8f5-f5b2007fc474.yml'
+# # When this action will be executed
+# on:
+#   # Automatically trigger it when detected changes in repo
+#   push:
+#     branches: 
+#       [ main ]
+#     paths:
+#     - '**'
+#     - '.github/workflows/autogen-demo-be-AutoDeployTrigger-169ed905-21ef-4e44-b8f5-f5b2007fc474.yml'
 
-  # Allow manual trigger 
-  workflow_dispatch:      
+#   # Allow manual trigger 
+#   workflow_dispatch:      
 
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    permissions: 
-      id-token: write #This is required for requesting the OIDC JWT Token
-      contents: read #Required when GH token is used to authenticate with private repo
+# jobs:
+#   build-and-deploy:
+#     runs-on: ubuntu-latest
+#     permissions: 
+#       id-token: write #This is required for requesting the OIDC JWT Token
+#       contents: read #Required when GH token is used to authenticate with private repo
 
-    steps:
-      - name: Checkout to the branch
-        uses: actions/checkout@v2
+#     steps:
+#       - name: Checkout to the branch
+#         uses: actions/checkout@v2
 
-      - name: Azure Login
-        uses: azure/login@v1
-        with:
-          client-id: ${{ secrets.AUTOGENDEMOBE_AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AUTOGENDEMOBE_AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AUTOGENDEMOBE_AZURE_SUBSCRIPTION_ID }}
+#       - name: Azure Login
+#         uses: azure/login@v1
+#         with:
+#           client-id: ${{ secrets.AUTOGENDEMOBE_AZURE_CLIENT_ID }}
+#           tenant-id: ${{ secrets.AUTOGENDEMOBE_AZURE_TENANT_ID }}
+#           subscription-id: ${{ secrets.AUTOGENDEMOBE_AZURE_SUBSCRIPTION_ID }}
 
-      - name: Build and push container image to registry
-        uses: azure/container-apps-deploy-action@v2
-        with:
-          appSourcePath: ${{ github.workspace }}
-          _dockerfilePathKey_: _dockerfilePath_
-          registryUrl: 
-          registryUsername: ${{ secrets.AUTOGENDEMOBE_REGISTRY_USERNAME }}
-          registryPassword: ${{ secrets.AUTOGENDEMOBE_REGISTRY_PASSWORD }}
-          containerAppName: autogen-demo-be
-          resourceGroup: rg-autogen-demos
-          imageToBuild: default/[parameters('containerAppName')]:${{ github.sha }}
-          _buildArgumentsKey_: |
-            _buildArgumentsValues_
+#       - name: Build and push container image to registry
+#         uses: azure/container-apps-deploy-action@v2
+#         with:
+#           appSourcePath: ${{ github.workspace }}
+#           _dockerfilePathKey_: _dockerfilePath_
+#           registryUrl: 
+#           registryUsername: ${{ secrets.AUTOGENDEMOBE_REGISTRY_USERNAME }}
+#           registryPassword: ${{ secrets.AUTOGENDEMOBE_REGISTRY_PASSWORD }}
+#           containerAppName: autogen-demo-be
+#           resourceGroup: rg-autogen-demos
+#           imageToBuild: default/[parameters('containerAppName')]:${{ github.sha }}
+#           _buildArgumentsKey_: |
+#             _buildArgumentsValues_
 
 

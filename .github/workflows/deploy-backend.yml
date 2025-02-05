@@ -1,0 +1,107 @@
+# name: Container App Build&Release to ACR
+
+# permissions:
+#     id-token: write # This is required for requesting the JWT
+#     contents: read
+
+# on:
+#   push:
+#     branches:
+#       - main
+#   # push:
+#   #   # Sequence of patterns matched against refs/tags
+#   #   tags:
+#   #     - "v*" # Push events to matching v*, i.e. v1.0, v20.15.10
+#   workflow_dispatch:
+#     inputs:
+#       version:
+#         description: 'Version to deploy'
+#         required: true
+#         default: 'v1.0.0'
+
+# env:
+#   ACR_NAME: intdemo
+#   SVC_NAME: cl-document-processing-be
+#   ACR_SERVER: ca8774cd6b94acr.azurecr.io
+#   VERSION: 0.0.1
+#   RESOURCE_GROUP: circuitloom
+#   CONTAINER_APP_ENV: cl-aca-env
+#   AZURE_OPENAI_SERVICE_NAME: circuitloom-openai
+#   AZURE_OPENAI_ENDPOINT: https://circuitloom-openai.openai.azure.com/
+#   AZURE_OPENAI_MODEL_NAME: gpt-4o
+#   AZURE_OPENAI_API_VERSION: "2024-06-01"
+#   AZURE_OPENAI_EMBEDDING_ENDPOINT: https://circuitloom-openai.openai.azure.com/
+#   AZURE_OPENAI_EMBEDDING_MODEL_NAME: text-embedding-3-large
+#   AZURE_SEARCH_ENDPOINT: https://intdemosearch.search.windows.net
+#   AZURE_SEARCH_INDEX: "demo-index-hack"
+#   AZURE_SEARCH_API_VERSION: "2023-07-01-Preview"
+#   AZURE_FORMREC_SERVICE: intdemodi
+#   FORM_RECOGNIZER_ENDPOINT: https://intdemodi.cognitiveservices.azure.com/
+#   DOCINT_API_VERSION: 2024-07-31-preview
+#   NUM_TOKENS: 2048
+#   MIN_CHUNK_SIZE: 100
+#   TOKEN_OVERLAP: 100
+#   AZURE_CLIENT_ID: 0a945281-1724-4519-b4ab-7d4ed71372fc
+
+# jobs:
+#   build-and-deploy:
+#     runs-on: ubuntu-latest
+#     # environment: DEV
+
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v4
+
+#       # - name: Get Version
+#       #   id: set_version
+#       #   run: |
+#       #     VER=${{github.ref_name}}
+#       #     echo $VER
+#       #     echo "::set-output name=version_tag::${VER:1}"
+
+#       - name: OIDC Login to Azure
+#         uses: azure/login@v2
+#         with:
+#           client-id: ${{ vars.AZURE_WI_CLIENT_ID }}
+#           tenant-id: ${{ vars.AZURE_WI_TENANT_ID }}
+#           subscription-id: ${{ vars.AZURE_WI_SUBS_ID }}
+      
+#       - name: Build the Docker image
+#         if: success()
+#         run: |
+#           docker build . --file Dockerfile --tag ${{ env.ACR_SERVER }}/${{ env.SVC_NAME }}:${{env.VERSION}}
+           
+        
+#       - name: Push the Docker image
+#         if: success()
+#         run: |    
+#           az acr login --name ${{ env.ACR_NAME }}
+#           docker push ${{ env.ACR_SERVER }}/${{ env.SVC_NAME }}:${{env.VERSION}}
+
+#       # - name: Build and deploy Container App
+#       #   uses: azure/container-apps-deploy-action@v2
+#       #   with:
+#       #     acrName: ${{ env.ACR_NAME }}
+#       #     resourceGroup: ${{ env.RESOURCE_GROUP }}
+#       #     containerAppName: ${{ env.SVC_NAME }}
+#       #     containerAppEnvironment: ${{ env.CONTAINER_APP_ENV }}
+#       #     imageToDeploy: ${{ env.ACR_SERVER }}/${{ env.SVC_NAME }}:${{ env.VERSION }}
+#       #     # environmentVariables: [${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}]
+#       #     environmentVariables: |
+#       #       "AZURE_OPENAI_SERVICE_NAME=${{ env.AZURE_OPENAI_SERVICE_NAME }}" "AZURE_OPENAI_ENDPOINT=${{ env.AZURE_OPENAI_ENDPOINT }}" "AZURE_OPENAI_API_KEY=secretref:aoai-key" "AZURE_OPENAI_MODEL_NAME=${{ env.AZURE_OPENAI_MODEL_NAME }}" "AZURE_OPENAI_API_VERSION=${{ env.AZURE_OPENAI_API_VERSION }}" "AZURE_OPENAI_EMBEDDING_ENDPOINT=${{ env.AZURE_OPENAI_EMBEDDING_ENDPOINT }}" "AZURE_OPENAI_EMBEDDING_MODEL_NAME=${{ env.AZURE_OPENAI_EMBEDDING_MODEL_NAME }}" "AZURE_SEARCH_ENDPOINT=${{ env.AZURE_SEARCH_ENDPOINT }}" "AZURE_SEARCH_KEY=secretref:search-key" "AZURE_SEARCH_INDEX=${{ env.AZURE_SEARCH_INDEX }}" "AZURE_SEARCH_API_VERSION=${{ env.AZURE_SEARCH_API_VERSION }}" "AZURE_FORMREC_SERVICE=${{ env.AZURE_FORMREC_SERVICE }}" "FORM_RECOGNIZER_ENDPOINT=${{ env.FORM_RECOGNIZER_ENDPOINT }}"  "DOCINT_API_VERSION=${{ env.DOCINT_API_VERSION }}" "NUM_TOKENS=${{ env.NUM_TOKENS }}" "MIN_CHUNK_SIZE=${{ env.MIN_CHUNK_SIZE }}" "TOKEN_OVERLAP=${{ env.TOKEN_OVERLAP }}" "AZURE_CLIENT_ID=${{ env.AZURE_CLIENT_ID }}"
+      
+#       - name: Deploy to Azure Container App
+#         run: |
+#             az account set --subscription ${{ vars.AZURE_WI_SUBS_ID }}
+#             az extension add --name containerapp --upgrade --allow-preview true
+#             az containerapp up \
+#                 --name ${{ env.SVC_NAME }} \
+#                 --resource-group ${{ env.RESOURCE_GROUP }} \
+#                 --environment ${{ env.CONTAINER_APP_ENV }} \
+#                 --registry-server ${{ env.ACR_SERVER }} \
+#                 --registry-username ${{ env.ACR_NAME }} \
+#                 --registry-password ${{ secrets.ACR_SECRET }} \
+#                 --image ${{ env.ACR_SERVER }}/${{ env.SVC_NAME }}:${{ env.VERSION }} \
+#                 --target-port 3000 \
+#                 --ingress 'external' \
+#                 --env-vars "AZURE_OPENAI_SERVICE_NAME=${{ env.AZURE_OPENAI_SERVICE_NAME }}" "AZURE_OPENAI_ENDPOINT=${{ env.AZURE_OPENAI_ENDPOINT }}" "AZURE_OPENAI_API_KEY=secretref:aoai-key" "AZURE_OPENAI_MODEL_NAME=${{ env.AZURE_OPENAI_MODEL_NAME }}" "AZURE_OPENAI_API_VERSION=${{ env.AZURE_OPENAI_API_VERSION }}" "AZURE_OPENAI_EMBEDDING_ENDPOINT=${{ env.AZURE_OPENAI_EMBEDDING_ENDPOINT }}" "AZURE_OPENAI_EMBEDDING_MODEL_NAME=${{ env.AZURE_OPENAI_EMBEDDING_MODEL_NAME }}" "AZURE_SEARCH_ENDPOINT=${{ env.AZURE_SEARCH_ENDPOINT }}" "AZURE_SEARCH_KEY=secretref:search-key" "AZURE_SEARCH_INDEX=${{ env.AZURE_SEARCH_INDEX }}" "AZURE_SEARCH_API_VERSION=${{ env.AZURE_SEARCH_API_VERSION }}" "AZURE_FORMREC_SERVICE=${{ env.AZURE_FORMREC_SERVICE }}" "FORM_RECOGNIZER_ENDPOINT=${{ env.FORM_RECOGNIZER_ENDPOINT }}"  "DOCINT_API_VERSION=${{ env.DOCINT_API_VERSION }}" "NUM_TOKENS=${{ env.NUM_TOKENS }}" "MIN_CHUNK_SIZE=${{ env.MIN_CHUNK_SIZE }}" "TOKEN_OVERLAP=${{ env.TOKEN_OVERLAP }}" "AZURE_CLIENT_ID=${{ env.AZURE_CLIENT_ID }}"
