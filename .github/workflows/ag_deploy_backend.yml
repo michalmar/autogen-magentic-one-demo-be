@@ -31,6 +31,12 @@ jobs:
         context: .
         push: true
         tags: ghcr.io/${{ github.repository }}/autogen-magentic-one-demo-be:latest
+    - name: Log in to Azure
+      uses: azure/login@v1
+      with:
+        client-id: ${{ secrets.AUTOGENDEMOBE_AZURE_CLIENT_ID }}
+        tenant-id: ${{ secrets.AUTOGENDEMOBE_AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AUTOGENDEMOBE_AZURE_SUBSCRIPTION_ID }}
 
     - name: Deploy to Azure Container App
       uses: azure/container-apps-deploy-action@v1
@@ -39,4 +45,6 @@ jobs:
         registryUrl: ghcr.io
         registryUsername: ${{ github.actor }}
         registryPassword: ${{ secrets.GH_TOKEN }}
+        containerAppName: my-test-container-app
+        resourceGroup: my-test-rg
             
