@@ -56,8 +56,17 @@ docker run --detach --publish 3100:3100 fastapi-demo
 ```
 
 
-## Deploy
+## Manual Deploy to Azure
+
 
 ```bash
-az containerapp up --resource-group rg-autogen-demos --name web-aca-app --ingress external --target-port 3100 --source .
+az containerapp up --resource-group rg-autogen-demos --name autogen-demo-be2  --ingress external --target-port 3100 --source . --env-vars "AZURE_OPENAI_ENDPOINT=https://aoai-eastus-mma-cdn.openai.azure.com/" "POOL_MANAGEMENT_ENDPOINT=https://swedencentral.dynamicsessions.io/subscriptions/de281c5e-5d60-4fc1-b905-c91caf45e624/resourceGroups/rg-dream-team/sessionPools/sessionpool"
+
 ```
+
+<!-- manged identity
+autogen-demo-mi
+
+```bash
+az containerapp up --resource-group rg-autogen-demos --name autogen-demo-be --ingress external --target-port 3100 --source . --assign-identity autogen-demo-mi
+``` -->
