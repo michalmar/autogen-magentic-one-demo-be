@@ -9,6 +9,8 @@ COPY requirements.txt .
 # Install the dependencies
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
+RUN playwright install --with-deps chromium
+
 # Copy the rest of the application code into the container
 COPY . .
 
