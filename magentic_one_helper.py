@@ -101,7 +101,7 @@ class MagenticOneHelper:
             self.session_id = session_id
 
         self.client = AzureOpenAIChatCompletionClient(
-            model="gpt-4o-2024-08-06",
+            model="gpt-4o-2024-11-20",
             azure_deployment="gpt-4o",
             api_version="2024-06-01",
             azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
