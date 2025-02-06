@@ -100,6 +100,6 @@ jobs:
                 --registry-username ${{ env.ACR_NAME }} \
                 --registry-password ${{ secrets.ACR_SECRET }} \
                 --image ${{ env.ACR_SERVER }}/${{ env.SVC_NAME }}:${{ env.VERSION }} \
-                --target-port 3000 \
+                --target-port 3100 \
                 --ingress 'external' \
                 --env-vars "AZURE_OPENAI_ENDPOINT=${{ env.AZURE_OPENAI_ENDPOINT }}" "POOL_MANAGEMENT_ENDPOINT=${{ env.POOL_MANAGEMENT_ENDPOINT }}" 
