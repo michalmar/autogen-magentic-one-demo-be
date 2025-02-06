@@ -116,7 +116,13 @@ def write_log(path, log_entry):
             f.write("")
     # append the log entry to a file
     with open(path, "a") as f:
-        f.write(f"{json.dumps(log_entry)}\n")
+        try:
+            f.write(f"{json.dumps(log_entry)}\n")
+        except Exception as e:
+            # TODO: better handling of the error
+            log_entry["content"] = f"Error writing log entry: {str(e)}"
+            f.write(f"{json.dumps(log_entry)}\n")
+
 
 
 def get_current_time():
