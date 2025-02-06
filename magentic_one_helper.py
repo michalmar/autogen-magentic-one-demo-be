@@ -110,6 +110,7 @@ class MagenticOneHelper:
                 "vision": True,
                 "function_calling": True,
                 "json_output": True,
+                "family": "gpt-4o"
             }
         )
 
