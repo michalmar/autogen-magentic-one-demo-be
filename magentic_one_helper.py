@@ -176,6 +176,7 @@ class MagenticOneHelper:
             # This is custom agent - RAG agent - you need to specify index_name and Azure Cognitive Search service endpoint and admin key in .env file
             elif (agent["type"] == "RAG"):
                 # RAG agent
+                print(f'AZURE_SEARCH_ADMIN_KEY:{os.getenv("AZURE_SEARCH_ADMIN_KEY")[1:10]}')
                 rag_agent = MagenticOneRAGAgent(
                     agent["name"], 
                     model_client=client, 
