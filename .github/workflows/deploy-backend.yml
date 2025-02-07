@@ -104,4 +104,4 @@ jobs:
                 --image ${{ env.ACR_SERVER }}/${{ env.SVC_NAME }}:${{ env.VERSION }} \
                 --target-port 3100 \
                 --ingress 'external' \
-                --env-vars "AZURE_OPENAI_ENDPOINT=${{ env.AZURE_OPENAI_ENDPOINT }}" "POOL_MANAGEMENT_ENDPOINT=${{ env.POOL_MANAGEMENT_ENDPOINT }}"  "AZURE_SEARCH_SERVICE_ENDPOINT=${{ env.AZURE_SEARCH_SERVICE_ENDPOINT }}" "AZURE_SEARCH_SERVICE_KEY=secretref:${{ secrets.AZURE_SEARCH_KEY }}" 
+                --env-vars "AZURE_OPENAI_ENDPOINT=${{ env.AZURE_OPENAI_ENDPOINT }}" "POOL_MANAGEMENT_ENDPOINT=${{ env.POOL_MANAGEMENT_ENDPOINT }}"  "AZURE_SEARCH_SERVICE_ENDPOINT=${{ env.AZURE_SEARCH_SERVICE_ENDPOINT }}" "AZURE_SEARCH_SERVICE_KEY=${{ secrets.AZURE_SEARCH_KEY }}" 
