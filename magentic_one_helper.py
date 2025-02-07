@@ -214,8 +214,12 @@ async def main(agents, task, run_locally) -> None:
             max_stalls=magentic_one.max_stalls_before_replan,
             
         )
-
-    await Console(team.run_stream(task=task))
+    try:
+        await Console(team.run_stream(task=task))
+    except Exception as e:
+        print(f"Error: {e}")
+    finally:
+        await team.shutdown()
 
 if __name__ == "__main__":   
     MAGENTIC_ONE_DEFAULT_AGENTS = [
