@@ -276,7 +276,7 @@ async def display_log_message(log_entry, logs_dir, session_id, client=None):
         response["type"] = _type
         response["source"] = _source
         response["content"] = _content[0].arguments
-        response["models_usage"] = _models_usage
+        # response["models_usage"] = _models_usage
 
     else:
         log_message_json["type"] = "N/A"
