@@ -410,8 +410,6 @@ async def chat_endpoint(
     user: dict = Depends(validate_token)
 ):
     print("User:", user["sub"])
-    print(f'AZURE_SEARCH_ADMIN_KEY:{os.getenv("AZURE_SEARCH_ADMIN_KEY")[1:10]}')
-    print(f'AZURE_SEARCH_SERVICE_ENDPOINT:{os.getenv("AZURE_SEARCH_SERVICE_ENDPOINT")[1:10]}')
     _agents = json.loads(message.agents) if message.agents else MAGENTIC_ONE_DEFAULT_AGENTS
    
     # Mock OpenAI response for demonstration
