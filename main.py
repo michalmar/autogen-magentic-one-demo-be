@@ -162,8 +162,10 @@ async def summarize_plan(plan, client):
     
     plan_summary = result.content
     return plan_summary
-async def display_log_message(log_entry, logs_dir, session_id, client=None):
+async def display_log_message(log_entry, logs_dir, session_id, user, client=None):
     _log_entry_json = log_entry
+    # _user_id = user["sub"]
+    # conversation = crud.get_conversation(user["sub"], session_id)
 
     log_file_name = f"{session_id}.log"
     log_path = os.path.join(logs_dir, log_file_name)
@@ -174,6 +176,7 @@ async def display_log_message(log_entry, logs_dir, session_id, client=None):
         "content": None,
         "stop_reason": None,
         "models_usage": None,
+        "content_image": None
     }
 
     response = {
@@ -286,6 +289,17 @@ async def display_log_message(log_entry, logs_dir, session_id, client=None):
         response["content"] = "Agents mumbling."
 
     write_log(log_path, log_message_json)
+
+    conversation = crud.save_message(
+            id=None, # it is auto-generated
+            user_id=user["sub"],
+            session_id=session_id,
+            message=log_message_json,
+            agents=None,
+            run_mode_locally=None,
+            timestamp=None
+        )
+
     return response
 
 
@@ -298,70 +312,20 @@ blob_service_client = BlobServiceClient.from_connection_string(
 )
 
 # Chat Endpoint
-# @app.post("/chat", response_model=schemas.ChatMessageResponse)
 @app.post("/chat")
 async def chat_endpoint(
     message: schemas.ChatMessageCreate,
-    db: Session = Depends(get_db),
     user: dict = Depends(validate_token)
 ):
-    # print("User:", user["sub"])
-    # # Mock OpenAI response for demonstration
-    # client = await get_openai_client()
-    # response = await client.chat.completions.create(
-    #     model="gpt-4o-mini",
-    #     messages=[{"role": "user", "content": message.content}]
-    # )
-    # # mock_response = "This is a mock AI response"
-    # mock_response = response.choices[0].message.content
-    
-    mock_response = """
-This is a mock AI response in Mardown format.
-
-## Heading 2
-
-- List item 1
-  - List item 2
-
-**Bold text**
-
-
-```python
-print("Hello, World!")
-```
-
-    """
-    
-    # # Create user if not exists
-    # db_user = crud.get_user(db, user["sub"])
-    # if not db_user:
-    #     db_user = models.User(
-    #         id=user["sub"],
-    #         username="test_user",
-    #         email="test@example.com"
-    #     )
-    #     db.add(db_user)
-    #     db.commit()
-    #     db.refresh(db_user)
-    
-    # # Create chat message
-    # db_message = crud.create_chat_message(
-    #     db=db,
-    #     message=message,
-    #     user_id=user["sub"]
-    # )
-    # db_message.response = mock_response
-    # db.commit()
-    # db.refresh(db_message)
-
-    db_message = schemas.ChatMessageResponse(
-        id=uuid.uuid4(),
-        content=message.content,
-        response =  mock_response,
-        timestamp = "2021-01-01T00:00:00",
-        user_id =  user["sub"],
-        orm_mode = True
+    # ...existing code...
+    mock_response = "This is a mock AI response (Markdown formatted)."
+    # Log the user message.
+    crud.save_message(
+        user_id=user["sub"],
+        session_id="session_direct",  # or generate a session id if needed
+        message={"content": message.content, "role": "user"}
     )
+    # Log the AI response message.
     response = {
         "time": get_current_time(),
         "type": "Muj",
@@ -371,11 +335,13 @@ print("Hello, World!")
         "models_usage": None,
         "content_image": None,
     }
-    #  json_response["response"] = f'session {session_id} and message: {json_response["content"]}'
-    #         yield f"data: {json.dumps(json_response)}\n\n"
-    # return db_message
-    return Response(content=json.dumps(response), media_type="application/json")
+    crud.save_message(
+        user_id=user["sub"],
+        session_id="session_direct",
+        message=response
+    )
 
+    return Response(content=json.dumps(response), media_type="application/json")
 
 # File Upload Endpoint
 @app.post("/upload-file", response_model=schemas.FileResponse)
@@ -406,61 +372,30 @@ async def upload_file(
 @app.post("/start", response_model=schemas.ChatMessageResponse)
 async def chat_endpoint(
     message: schemas.ChatMessageCreate,
-    db: Session = Depends(get_db),
     user: dict = Depends(validate_token)
 ):
     print("User:", user["sub"])
     _agents = json.loads(message.agents) if message.agents else MAGENTIC_ONE_DEFAULT_AGENTS
-   
-    # Mock OpenAI response for demonstration
-    # client = await get_openai_client()
-    # response = await client.chat.completions.create(
-    #     model="gpt-4o-mini",
-    #     messages=[{"role": "user", "content": message.content}]
-    # )
-    # # mock_response = "This is a mock AI response"
-    # mock_response = response.choices[0].message.content
-    
-    # # Create user if not exists
-    # db_user = crud.get_user(db, user["sub"])
-    # if not db_user:
-    #     db_user = models.User(
-    #         id=user["sub"],
-    #         username="test_user",
-    #         email="test@example.com"
-    #     )
-    #     db.add(db_user)
-    #     db.commit()
-    #     db.refresh(db_user)
-    
-    # # Create chat message
-    # db_message = crud.create_chat_message(
-    #     db=db,
-    #     message=message,
-    #     user_id=user["sub"]
-    # )
-    # db_message.response = mock_response
-    # db.commit()
-    # db.refresh(db_message)
     _session_id = generate_session_name()
-    session_data[_session_id] = {
-        "user_id": user["sub"],
-        "user_message": message.content,
-        "messages": [],
-
-        "agents": _agents,
-        "run_mode_locally" : False
-    }
-
+    # Save user message into conversation file
+    conversation = crud.save_message(
+        id=uuid.uuid4(),
+        user_id=user["sub"],
+        session_id=_session_id,
+        message={"content": message.content, "role": "user"},
+        agents=_agents,
+        run_mode_locally=False,
+        timestamp=get_current_time()
+    )
+    # Return session_id as the conversation identifier
     db_message = schemas.ChatMessageResponse(
         id=uuid.uuid4(),
         content=message.content,
-        response =  _session_id,
-        timestamp = "2021-01-01T00:00:00",
-        user_id =  user["sub"],
-        orm_mode = True
+        response=_session_id,
+        timestamp="2021-01-01T00:00:00",
+        user_id=user["sub"],
+        orm_mode=True
     )
-    
     return db_message
 
 
@@ -475,19 +410,31 @@ async def chat_stream(
     logs_dir="./logs"
     if not os.path.exists(logs_dir):    
         os.makedirs(logs_dir)
+
+    # get the conversation from the database using user and session id
+    conversation = crud.get_conversation(user["sub"], session_id)
+    # get first message from the conversation
+    first_message = conversation["messages"][0]
+    # get the task from the first message as content
+    task = first_message["content"]
+    print("Task:", task)
+
+    _run_locally = conversation["run_mode_locally"]
+    _agents = conversation["agents"]
     
-    task = session_data[session_id]["user_message"]
+    # task = session_data[session_id]["user_message"]
     # TODO DBG - Remove
     # task = "Generate a python script and execute Fibonacci series below 1000"
     
      # Initialize the MagenticOne system
-    magentic_one = MagenticOneHelper(logs_dir=logs_dir, save_screenshots=False, run_locally=session_data[session_id]["run_mode_locally"])
-    await magentic_one.initialize(agents=session_data[session_id]["agents"], session_id=session_id)
+    magentic_one = MagenticOneHelper(logs_dir=logs_dir, save_screenshots=False, run_locally=_run_locally)
+    await magentic_one.initialize(agents=_agents, session_id=session_id)
 
 
     stream, cancellation_token = magentic_one.main(task = task)
     
-    session_data[session_id]["cancellation_token"] = cancellation_token
+    # TODO: Store the cancellation token in the session data
+    # session_data[session_id]["cancellation_token"] = cancellation_token
 
     # async for log_entry in stream:
     #     yield f"data: {json.dumps({'response': f'session {session_id} and message: {log_entry.content}'})}\n\n"
@@ -496,7 +443,7 @@ async def chat_stream(
     async def event_generator(stream):
 
         async for log_entry in stream:
-            json_response = await display_log_message(log_entry=log_entry, logs_dir=logs_dir, session_id=magentic_one.session_id, client=magentic_one.client)
+            json_response = await display_log_message(log_entry=log_entry, logs_dir=logs_dir, session_id=magentic_one.session_id, client=magentic_one.client, user=user)
             # yield f"data: {json.dumps({'response': f'session {session_id} and message: {log_entry.content}'})}\n\n"
             json_response["response"] = f'session {session_id} and message: {json_response["content"]}'
             yield f"data: {json.dumps(json_response)}\n\n"
@@ -521,3 +468,15 @@ async def stop(session_id: str = Query(...)):
     except Exception as e:
         print(f"Error stopping session {session_id}: {str(e)}")
         return {"status": "error", "message": f"Error stopping session: {str(e)}"}
+
+# New endpoint to retrieve all conversations.
+@app.post("/conversations")
+async def list_all_conversations():
+    conversations = crud.get_all_conversations()
+    return conversations
+
+# New endpoint to retrieve conversations for the authenticated user.
+@app.post("/conversations/user")
+async def list_user_conversations(user: dict = Depends(validate_token)):
+    conversations = crud.get_user_conversations(user["sub"])
+    return conversations
