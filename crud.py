@@ -1,54 +1,69 @@
 # File: crud.py
-from sqlalchemy.orm import Session
-import models
-import schemas
-import uuid
+import os, json, uuid
+from datetime import datetime
 from typing import List
 
-def get_user(db: Session, user_id: str):
-    return db.query(models.User).filter(models.User.id == user_id).first()
+DATA_DIR = "./data/conversations"
 
-def create_chat_message(db: Session, message: schemas.ChatMessageCreate, user_id: str):
-    db_message = models.ChatMessage(
-        user_id=user_id,
-        content=message.content,
-        id=str(uuid.uuid4())
-    )
-    db.add(db_message)
-    db.commit()
-    db.refresh(db_message)
-    return db_message
+def ensure_data_dir():
+    if not os.path.exists(DATA_DIR):
+        os.makedirs(DATA_DIR)
+    return DATA_DIR
 
-def get_chat_history(db: Session, user_id: str, limit: int = 100):
-    return db.query(models.ChatMessage)\
-        .filter(models.ChatMessage.user_id == user_id)\
-        .order_by(models.ChatMessage.timestamp.desc())\
-        .limit(limit)\
-        .all()
+def get_conversation_filepath(user_id: str, session_id: str) -> str:
+    ensure_data_dir()
+    return os.path.join(DATA_DIR, f"{user_id}_{session_id}.json")
 
-def create_file(db: Session, filename: str, user_id: str, blob_url: str, size: int):
-    db_file = models.File(
-        user_id=user_id,
-        filename=filename,
-        size=size,
-        blob_url=blob_url,
-        id=str(uuid.uuid4())
-    )
-    db.add(db_file)
-    db.commit()
-    db.refresh(db_file)
-    return db_file
+# Save a message to a conversation JSON file.
+def save_message(id: str, user_id: str, session_id: str, message: dict, agents: dict, run_mode_locally: bool, timestamp: str):
+    filepath = get_conversation_filepath(user_id, session_id)
+    if os.path.exists(filepath):
+        with open(filepath, "r") as f:
+            conversation = json.load(f)
+    else:
+        conversation = {
+            "id": str(id),
+            "user_id": user_id,
+            "session_id": session_id,
+            "messages": [],
+            "agents": agents,
+            "run_mode_locally": run_mode_locally,
+            "timestamp": timestamp
+        }
+    # Append message with timestamp
+    message["id"] = str(uuid.uuid4())
+    message["timestamp"] = datetime.now().isoformat()
+    conversation["messages"].append(message)
+    with open(filepath, "w") as f:
+        json.dump(conversation, f, indent=2)
+    return conversation
 
-def get_user_files(db: Session, user_id: str):
-    return db.query(models.File)\
-        .filter(models.File.user_id == user_id)\
-        .order_by(models.File.upload_date.desc())\
-        .all()
+# Retrieve a single conversation.
+def get_conversation(user_id: str, session_id: str):
+    filepath = get_conversation_filepath(user_id, session_id)
+    if os.path.exists(filepath):
+        with open(filepath, "r") as f:
+            return json.load(f)
+    return None
 
-def delete_file(db: Session, file_id: str):
-    db_file = db.query(models.File).filter(models.File.id == file_id).first()
-    if db_file:
-        db.delete(db_file)
-        db.commit()
-        return True
-    return False
+# List all conversations.
+def get_all_conversations():
+    ensure_data_dir()
+    conversations = []
+    for fname in os.listdir(DATA_DIR):
+        if fname.endswith(".json"):
+            path = os.path.join(DATA_DIR, fname)
+            with open(path, "r") as f:
+                conversations.append(json.load(f))
+    return conversations
+
+# List conversations for a particular user.
+def get_user_conversations(user_id: str):
+    ensure_data_dir()
+    conversations = []
+    for fname in os.listdir(DATA_DIR):
+        if fname.startswith(user_id+"_") and fname.endswith(".json"):
+            path = os.path.join(DATA_DIR, fname)
+            with open(path, "r") as f:
+                conversations.append(json.load(f))
+    return conversations
