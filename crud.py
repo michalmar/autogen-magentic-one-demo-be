@@ -31,8 +31,8 @@ def save_message(id: str, user_id: str, session_id: str, message: dict, agents: 
             "timestamp": timestamp
         }
     # Append message with timestamp
-    message["id"] = str(uuid.uuid4())
-    message["timestamp"] = datetime.now().isoformat()
+    # message["id"] = str(uuid.uuid4())
+    # message["timestamp"] = datetime.now().isoformat()
     conversation["messages"].append(message)
     with open(filepath, "w") as f:
         json.dump(conversation, f, indent=2)
@@ -47,7 +47,7 @@ def get_conversation(user_id: str, session_id: str):
     return None
 
 # List all conversations.
-def get_all_conversations():
+def get_all_conversations() -> List[dict]:
     ensure_data_dir()
     conversations = []
     for fname in os.listdir(DATA_DIR):

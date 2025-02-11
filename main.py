@@ -18,6 +18,7 @@ from autogen_agentchat.base import TaskResult
 from magentic_one_helper import generate_session_name
 
 from datetime import datetime 
+from schemas import AutoGenMessage
 
 session_data = {}
 MAGENTIC_ONE_DEFAULT_AGENTS = [
@@ -164,143 +165,59 @@ async def summarize_plan(plan, client):
     return plan_summary
 async def display_log_message(log_entry, logs_dir, session_id, user, client=None):
     _log_entry_json = log_entry
-    # _user_id = user["sub"]
-    # conversation = crud.get_conversation(user["sub"], session_id)
-
-    log_file_name = f"{session_id}.log"
-    log_path = os.path.join(logs_dir, log_file_name)
-    log_message_json = {
-        "time": get_current_time(),
-        "type": None,
-        "source": None,
-        "content": None,
-        "stop_reason": None,
-        "models_usage": None,
-        "content_image": None
-    }
-
-    response = {
-        "time": get_current_time(),
-        "type": None,
-        "source": None,
-        "content": None,
-        "stop_reason": None,
-        "models_usage": None,
-        "content_image": None,
-        "session_id": session_id
-    }
+    _user_id = user["sub"]
+    
+    _response = AutoGenMessage(
+        time=get_current_time(),
+        session_id=session_id,
+        session_user=_user_id
+        )
 
     # Check if the message is a TaskResult class
     if isinstance(_log_entry_json, TaskResult):
-        _type = "TaskResult"
-        _source = "TaskResult"
-        _content = _log_entry_json.messages[-1]
-        _stop_reason = _log_entry_json.stop_reason
-        _timestamp = get_current_time()
-        icon_result = "🎯"
-        # Do not display the final answer just yet, only set it in the session state
-        # st.session_state["final_answer"] = _content.content
-        # st.session_state["stop_reason"] = _stop_reason
-
-        log_message_json["type"] = _type
-        log_message_json["source"] = _source
-        log_message_json["content"] = _content.content
-        log_message_json["stop_reason"] = _stop_reason
-
-        response["type"] = _type
-        response["source"] = _source
-        response["content"] = _content.content
-        response["stop_reason"] = _stop_reason
+        _response.type = "TaskResult"
+        _response.source = "TaskResult"
+        _response.content = _log_entry_json.messages[-1].content
+        _response.stop_reason = _log_entry_json.stop_reason
 
     elif isinstance(_log_entry_json, MultiModalMessage):
-        _type = _log_entry_json.type
-        _source = _log_entry_json.source
-        _content = _log_entry_json.content
-        _timestamp = get_current_time()
-
-        log_message_json["type"] = _type
-        log_message_json["source"] = _source
-        log_message_json["content"] = _content[0]
-
-        response["type"] = _type
-        response["source"] = _source
-        # response["content"] = {
-        #     "text": _content[0],
-        #     "image": _content[1].data_uri
-        # }
-        response["content"] = _content[0]
-        response["content_image"] = _content[1].data_uri
+        _response.type = _log_entry_json.type
+        _response.source = _log_entry_json.source
+        _response.content = _log_entry_json.content[0] # text wthout image
+        _response.content_image = _log_entry_json.content[1].data_uri # TODO: base64 encoded image -> text / serialize
 
     elif isinstance(_log_entry_json, TextMessage):
-        _type = _log_entry_json.type
-        _source = _log_entry_json.source
-        _content = _log_entry_json.content
-        _timestamp = get_current_time()
-
-        # if _source == "MagenticOneOrchestrator" and not st.session_state["planned"]:
-        #     plan_summary = await summarize_plan(_content, client)
-        #     SESSION_INFO.write(f"Session ID: `{st.session_state.session_id}`")
-        #     PLAN_PLACE.write(plan_summary)
-        #     st.session_state["planned"] = True
-
-        log_message_json["type"] = _type
-        log_message_json["source"] = _source
-        log_message_json["content"] = _content
-
-        response["type"] = _type
-        response["source"] = _source
-        response["content"] = _content
+        _response.type = _log_entry_json.type
+        _response.source = _log_entry_json.source
+        _response.content = _log_entry_json.content
 
     elif isinstance(_log_entry_json, ToolCallExecutionEvent):
-        _type = _log_entry_json.type
-        _source = _log_entry_json.source
-        _content = _log_entry_json.content
-        _timestamp = get_current_time()
-
-        log_message_json["type"] = _type
-        log_message_json["source"] = _source
-        log_message_json["content"] = _content[0].content
-
-        response["type"] = _type
-        response["source"] = _source
-        response["content"] = _content[0].content
+        _response.type = _log_entry_json.type
+        _response.source = _log_entry_json.source
+        _response.content = _log_entry_json.content[0] # tool execution
 
     elif isinstance(_log_entry_json, ToolCallRequestEvent):
-        _type = _log_entry_json.type
-        _source = _log_entry_json.source
-        _content = _log_entry_json.content
-        _timestamp = get_current_time()
-        _models_usage = _log_entry_json.models_usage
-
-        log_message_json["type"] = _type
-        log_message_json["source"] = _source
-        log_message_json["content"] = _content[0].arguments
-
-        response["type"] = _type
-        response["source"] = _source
-        response["content"] = _content[0].arguments
-        # response["models_usage"] = _models_usage
+        # _models_usage = _log_entry_json.models_usage
+        _response.type = _log_entry_json.type
+        _response.source = _log_entry_json.source
+        _response.content = _log_entry_json.content[0].arguments # tool execution
 
     else:
-        log_message_json["type"] = "N/A"
-        log_message_json["content"] = "Agents mumbling."
+        _response.type = "N/A"
+        _response.source = "N/A"
+        _response.content = "Agents mumbling."
 
-        response["type"] = "N/A"
-        response["content"] = "Agents mumbling."
-
-    write_log(log_path, log_message_json)
-
-    conversation = crud.save_message(
+    _ = crud.save_message(
             id=None, # it is auto-generated
             user_id=user["sub"],
             session_id=session_id,
-            message=log_message_json,
+            message=_response.to_json(),
             agents=None,
             run_mode_locally=None,
             timestamp=None
         )
 
-    return response
+    return _response
 
 
 
@@ -422,16 +339,17 @@ async def chat_stream(
     _run_locally = conversation["run_mode_locally"]
     _agents = conversation["agents"]
     
-    # task = session_data[session_id]["user_message"]
-    # TODO DBG - Remove
-    # task = "Generate a python script and execute Fibonacci series below 1000"
     
-     # Initialize the MagenticOne system
+    #  Initialize the MagenticOne system
     magentic_one = MagenticOneHelper(logs_dir=logs_dir, save_screenshots=False, run_locally=_run_locally)
     await magentic_one.initialize(agents=_agents, session_id=session_id)
 
-
     stream, cancellation_token = magentic_one.main(task = task)
+
+    # DBG
+    # stream = [TextMessage(source="MagenticOneOrchestrator", models_usage=None, content="Please create a Python script that computes and prints the Fibonacci series where all numbers are below 1000.", type="TextMessage"),
+    #             TextMessage(source="MagenticOneOrchestrator", models_usage=None, content="Druhaa message.", type="TextMessage"),
+    #          ]
     
     # TODO: Store the cancellation token in the session data
     # session_data[session_id]["cancellation_token"] = cancellation_token
@@ -443,16 +361,16 @@ async def chat_stream(
     async def event_generator(stream):
 
         async for log_entry in stream:
-            json_response = await display_log_message(log_entry=log_entry, logs_dir=logs_dir, session_id=magentic_one.session_id, client=magentic_one.client, user=user)
-            # yield f"data: {json.dumps({'response': f'session {session_id} and message: {log_entry.content}'})}\n\n"
-            json_response["response"] = f'session {session_id} and message: {json_response["content"]}'
-            yield f"data: {json.dumps(json_response)}\n\n"
+            json_response = await display_log_message(log_entry=log_entry, logs_dir=logs_dir, session_id=magentic_one.session_id, client=magentic_one.client, user=user)    
+            yield f"data: {json.dumps(json_response.to_json())}\n\n"
+      
+        # # DBG
+        # for log_entry in stream:
+        #     import time
+        #     time.sleep(1)
+        #     json_response = await display_log_message(log_entry=log_entry, logs_dir=logs_dir, session_id=session_id, client=None, user=user)
+        #     yield f"data: {json.dumps(json_response.to_json())}\n\n"
 
-        
-        # for i in range(3):
-        #     # Replace with real background logic
-        #     yield f"data: {json.dumps({'response': f'Chunk {i} from server in session {session_id} and message: {task}'})}\n\n"
-        #     await asyncio.sleep(1)
     return StreamingResponse(event_generator(stream), media_type="text/event-stream")
 
 @app.get("/stop")
@@ -472,8 +390,12 @@ async def stop(session_id: str = Query(...)):
 # New endpoint to retrieve all conversations.
 @app.post("/conversations")
 async def list_all_conversations():
-    conversations = crud.get_all_conversations()
-    return conversations
+    try:
+        conversations = crud.get_all_conversations()
+        return conversations
+    except Exception as e:
+        print(f"Error retrieving conversations: {str(e)}")
+        return []
 
 # New endpoint to retrieve conversations for the authenticated user.
 @app.post("/conversations/user")
