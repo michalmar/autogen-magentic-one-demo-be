@@ -46,6 +46,11 @@ def get_conversation(user_id: str, session_id: str):
             return json.load(f)
     return None
 
+def extract_session_id(filepath: str) -> str:
+    filename = os.path.basename(filepath)
+    session_id = filename.split('_', 1)[-1].rsplit('.', 1)[0]
+    return session_id
+
 # List all conversations.
 def get_all_conversations() -> List[dict]:
     ensure_data_dir()
@@ -61,7 +66,7 @@ def get_all_conversations() -> List[dict]:
                 conversations.append({
                         "id": "DUMMY-b666-4943-9c3d-ec9482751601",
                         "user_id": "user123",
-                        "session_id": "dummy-error-0001",
+                        "session_id": extract_session_id(path),
                         "messages": [],
                         "agents": [],
                         "run_mode_locally": "false",
@@ -80,3 +85,10 @@ def get_user_conversations(user_id: str):
             with open(path, "r") as f:
                 conversations.append(json.load(f))
     return conversations
+
+def delete_conversation(user_id: str, session_id: str) -> bool:
+    filepath = get_conversation_filepath(user_id, session_id)
+    if os.path.exists(filepath):
+        os.remove(filepath)
+        return True
+    return False

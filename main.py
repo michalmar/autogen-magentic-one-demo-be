@@ -402,3 +402,15 @@ async def list_all_conversations():
 async def list_user_conversations(user: dict = Depends(validate_token)):
     conversations = crud.get_user_conversations(user["sub"])
     return conversations
+
+@app.post("/conversations/delete")
+async def delete_conversation(session_id: str = Query(...), user: dict = Depends(validate_token)):
+    try:
+        result = crud.delete_conversation(user["sub"], session_id)
+        if result:
+            return {"status": "success", "message": f"Conversation {session_id} deleted successfully."}
+        else:
+            return {"status": "error", "message": f"Conversation {session_id} not found."}
+    except Exception as e:
+        print(f"Error deleting conversation {session_id}: {str(e)}")
+        return {"status": "error", "message": f"Error deleting conversation: {str(e)}"}
