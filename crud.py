@@ -53,8 +53,21 @@ def get_all_conversations() -> List[dict]:
     for fname in os.listdir(DATA_DIR):
         if fname.endswith(".json"):
             path = os.path.join(DATA_DIR, fname)
-            with open(path, "r") as f:
-                conversations.append(json.load(f))
+            try:
+                with open(path, "r") as f:
+                    conversations.append(json.load(f))
+            except json.JSONDecodeError:
+                print(f"Error decoding JSON from file {path}")
+                conversations.append({
+                        "id": "DUMMY-b666-4943-9c3d-ec9482751601",
+                        "user_id": "user123",
+                        "session_id": "dummy-error-0001",
+                        "messages": [],
+                        "agents": [],
+                        "run_mode_locally": "false",
+                        "timestamp": "ERROR"
+
+                    })
     return conversations
 
 # List conversations for a particular user.
