@@ -194,7 +194,7 @@ async def display_log_message(log_entry, logs_dir, session_id, user, client=None
     elif isinstance(_log_entry_json, ToolCallExecutionEvent):
         _response.type = _log_entry_json.type
         _response.source = _log_entry_json.source
-        _response.content = _log_entry_json.content[0] # tool execution
+        _response.content = _log_entry_json.content[0].content # tool execution
 
     elif isinstance(_log_entry_json, ToolCallRequestEvent):
         # _models_usage = _log_entry_json.models_usage
