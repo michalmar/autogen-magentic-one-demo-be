@@ -71,3 +71,4 @@ class AutoGenMessage(BaseModel):
             "session_id": self.session_id,
             "session_user": self.session_user
         }
+    

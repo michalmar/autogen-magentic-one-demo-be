@@ -23,12 +23,15 @@ env:
   ACR_NAME: ca8774cd6b94acr
   SVC_NAME: autogen-demo-be2
   ACR_SERVER: ca8774cd6b94acr.azurecr.io
-  VERSION: 0.0.14
+  VERSION: 0.0.15
   RESOURCE_GROUP: rg-autogen-demos
   CONTAINER_APP_ENV: managedEnvironment-rgautogendemos-a952
   AZURE_OPENAI_ENDPOINT: https://aoai-eastus-mma-cdn.openai.azure.com/
   POOL_MANAGEMENT_ENDPOINT: https://swedencentral.dynamicsessions.io/subscriptions/de281c5e-5d60-4fc1-b905-c91caf45e624/resourceGroups/rg-dream-team/sessionPools/sessionpool
   AZURE_SEARCH_SERVICE_ENDPOINT: https://search-demo-mma.search.windows.net
+  COSMOS_DB_URI: https://mma-cosmosdb.documents.azure.com:443/
+  COSMOS_DB_DATABASE: ag_demo
+  COSMOS_DB_CONTAINER: ag_demo
 #   AZURE_SEARCH_SERVICE_KEY: secretref:AZURE_SEARCH_KEY
 #   AZURE_OPENAI_EMBEDDING_ENDPOINT: https://circuitloom-openai.openai.azure.com/
 #   AZURE_OPENAI_EMBEDDING_MODEL_NAME: text-embedding-3-large
@@ -104,4 +107,4 @@ jobs:
                 --image ${{ env.ACR_SERVER }}/${{ env.SVC_NAME }}:${{ env.VERSION }} \
                 --target-port 3100 \
                 --ingress 'external' \
-                --env-vars "AZURE_OPENAI_ENDPOINT=${{ env.AZURE_OPENAI_ENDPOINT }}" "POOL_MANAGEMENT_ENDPOINT=${{ env.POOL_MANAGEMENT_ENDPOINT }}"  "AZURE_SEARCH_SERVICE_ENDPOINT=${{ env.AZURE_SEARCH_SERVICE_ENDPOINT }}" "AZURE_SEARCH_ADMIN_KEY=${{ secrets.AZURE_SEARCH_KEY }}" 
+                --env-vars "AZURE_OPENAI_ENDPOINT=${{ env.AZURE_OPENAI_ENDPOINT }}" "POOL_MANAGEMENT_ENDPOINT=${{ env.POOL_MANAGEMENT_ENDPOINT }}"  "AZURE_SEARCH_SERVICE_ENDPOINT=${{ env.AZURE_SEARCH_SERVICE_ENDPOINT }}" "AZURE_SEARCH_ADMIN_KEY=${{ secrets.AZURE_SEARCH_KEY }}" "COSMOS_DB_URI=${{ env.COSMOS_DB_URI }}" "COSMOS_DB_DATABASE=${{ env.COSMOS_DB_DATABASE }}" "COSMOS_DB_CONTAINER=${{ env.COSMOS_DB_CONTAINER }}"

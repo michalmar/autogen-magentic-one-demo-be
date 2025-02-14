@@ -70,3 +70,15 @@ autogen-demo-mi
 ```bash
 az containerapp up --resource-group rg-autogen-demos --name autogen-demo-be --ingress external --target-port 3100 --source . --assign-identity autogen-demo-mi
 ``` -->
+
+
+## Cosmos DB Setting rights
+
+```bash
+
+resourceGroupName='rg-ai'
+accountName='mma-cosmosdb'
+readOnlyRoleDefinitionId='00000000-0000-0000-0000-000000000002' # This is the ID of the Cosmos DB Built-in Data contributor role definition
+principalId=da6cb168-9a34-4ebe-9df8-638971852649 # This is the object ID of the managed identity.
+az cosmosdb sql role assignment create --account-name $accountName --resource-group $resourceGroupName --scope "/" --principal-id $principalId --role-definition-id $readOnlyRoleDefinitionId
+```

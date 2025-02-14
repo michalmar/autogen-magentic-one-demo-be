@@ -6,7 +6,7 @@ from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from azure.storage.blob import BlobServiceClient
 # from sqlalchemy.orm import Session
 import schemas, crud
-from database import get_db
+from database import store_conversation, fetch_user_conversatons, delete_user_conversation
 import os
 import uuid
 from contextlib import asynccontextmanager
@@ -179,6 +179,7 @@ async def display_log_message(log_entry, logs_dir, session_id, user, client=None
         _response.source = "TaskResult"
         _response.content = _log_entry_json.messages[-1].content
         _response.stop_reason = _log_entry_json.stop_reason
+        store_conversation(_log_entry_json, _response)
 
     elif isinstance(_log_entry_json, MultiModalMessage):
         _response.type = _log_entry_json.type
@@ -365,9 +366,10 @@ async def stop(session_id: str = Query(...)):
 
 # New endpoint to retrieve all conversations.
 @app.post("/conversations")
-async def list_all_conversations():
+async def list_all_conversations(user: dict = Depends(validate_token)):
     try:
-        conversations = crud.get_all_conversations()
+        # conversations = crud.get_all_conversations()
+        conversations = fetch_user_conversatons(user_id=user["sub"])
         return conversations
     except Exception as e:
         print(f"Error retrieving conversations: {str(e)}")
@@ -382,7 +384,8 @@ async def list_user_conversations(user: dict = Depends(validate_token)):
 @app.post("/conversations/delete")
 async def delete_conversation(session_id: str = Query(...), user: dict = Depends(validate_token)):
     try:
-        result = crud.delete_conversation(user["sub"], session_id)
+        # result = crud.delete_conversation(user["sub"], session_id)
+        result = delete_user_conversation(user_id=user["sub"], session_id=session_id)
         if result:
             return {"status": "success", "message": f"Conversation {session_id} deleted successfully."}
         else:
