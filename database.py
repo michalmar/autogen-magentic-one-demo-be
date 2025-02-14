@@ -27,5 +27,5 @@ def get_db():
     #     partition_key=PartitionKey(path="/user_id"),
     #     offer_throughput=400
     # ) 
-    return container
-    # return True
+    # return container
+    return True
