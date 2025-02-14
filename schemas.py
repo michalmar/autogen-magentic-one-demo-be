@@ -62,7 +62,7 @@ class AutoGenMessage(BaseModel):
     def to_json(self):
         return {
             "time" : self.time,
-            "type" : self.time,
+            "type" : self.type,
             "source": self.source,
             "content": self.content,
             "stop_reason": self.stop_reason,

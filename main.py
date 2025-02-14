@@ -214,7 +214,7 @@ async def display_log_message(log_entry, logs_dir, session_id, user, client=None
             message=_response.to_json(),
             agents=None,
             run_mode_locally=None,
-            timestamp=None
+            timestamp=_response.time
         )
 
     return _response
