@@ -4,9 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2AuthorizationCodeBearer
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from azure.storage.blob import BlobServiceClient
-from sqlalchemy.orm import Session
-import models, schemas, crud
-from database import get_db, Base, engine
+# from sqlalchemy.orm import Session
+import schemas, crud
+from database import get_db
 import os
 import uuid
 from contextlib import asynccontextmanager
@@ -60,7 +60,7 @@ MAGENTIC_ONE_DEFAULT_AGENTS = [
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup code
-    Base.metadata.create_all(bind=engine)
+    # Base.metadata.create_all(bind=engine)
     yield
     # Shutdown code (optional)
     # engine.dispose()
@@ -260,30 +260,6 @@ async def chat_endpoint(
 
     return Response(content=json.dumps(response), media_type="application/json")
 
-# File Upload Endpoint
-@app.post("/upload-file", response_model=schemas.FileResponse)
-async def upload_file(
-    file: UploadFile,
-    db: Session = Depends(get_db),
-    user: dict = Depends(validate_token)
-):
-    # Mock file storage
-    blob_url = f"https://example.com/files/{uuid.uuid4()}-{file.filename}"
-    
-    # Create file record
-    db_file = crud.create_file(
-        db=db,
-        filename=file.filename,
-        user_id=user["sub"],
-        blob_url=blob_url,
-        size=1024  # Mock size
-    )
-    
-    return db_file
-
-
-
-
 
 # Chat Endpoint
 @app.post("/start", response_model=schemas.ChatMessageResponse)
@@ -320,7 +296,7 @@ async def chat_endpoint(
 @app.get("/chat-stream")
 async def chat_stream(
     session_id: str = Query(...),
-    db: Session = Depends(get_db),
+    # db: Session = Depends(get_db),
     user: dict = Depends(validate_token)
 ):
     # create folder for logs if not exists

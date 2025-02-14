@@ -23,7 +23,7 @@ env:
   ACR_NAME: ca8774cd6b94acr
   SVC_NAME: autogen-demo-be2
   ACR_SERVER: ca8774cd6b94acr.azurecr.io
-  VERSION: 0.0.12
+  VERSION: 0.0.13
   RESOURCE_GROUP: rg-autogen-demos
   CONTAINER_APP_ENV: managedEnvironment-rgautogendemos-a952
   AZURE_OPENAI_ENDPOINT: https://aoai-eastus-mma-cdn.openai.azure.com/
